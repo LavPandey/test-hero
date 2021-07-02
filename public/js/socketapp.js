@@ -9,6 +9,10 @@ I2P_SOCKET.on('userinvite', function (data) {
     }
 });
 
-I2P_SOCKET.on('newmeet', function (data) {
-    debugger;
+I2P_SOCKET.on('groupinvite', function (data) {
+    if (data.users.indexOf(getLoggedInUser()) !== -1) {
+        modalMgr.newInviteModal.open();
+        modalMgr.newInviteModal.inviteData = data;
+        $('#newInviteModal .modal-body').html(data.from + ' Inviting to join group call...');
+    }
 });

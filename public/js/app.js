@@ -120,11 +120,15 @@ function endCall() {
 function initJitsiFrame(meetOption) {
     endCall();
 
+    for (var key in modalMgr) {
+        modalMgr[key].close();
+    }
+
     JAPI = new JitsiMeetExternalAPI(domain, meetOption);
 };
 
 function prepareUrl(val) {
-    return (location.origin + location.pathname + '?meet=' + val);
+    return (location.origin + location.pathname + '?meet=' + (val || defaultMeetName));
 }
 
 
@@ -168,6 +172,11 @@ function initPopModal() {
         dismissible: false,
         top: '30%'
     })[0];
+
+    modalMgr.newInviteModal = M.Modal.init($('#newInviteModal'), {
+        dismissible: false,
+        top: '30%'
+    })[0];
 }
 
 function onAddUserClick() {
@@ -206,6 +215,12 @@ function startMeet() {
 
     showInitialSetup(true);
     toggleClass('#meet', 'cust-hidden');
+
+    I2P_SOCKET.emit('groupinvite', {
+        users: inviteUser,
+        from: getLoggedInUser(),
+        roomName: option.roomName
+    });
 
     initJitsiFrame(option);
 
@@ -291,15 +306,34 @@ function acceptUserInvite() {
     toggleClass('#meet', 'cust-hidden');
 
     I2P_SOCKET.emit('userinviteaccepted', {
-        to: currentUser,
-        from: userId,
-        roomName: roomName
+        to: data.currentUser,
+        from: data.userId,
+        roomName: data.roomName
     });
 
     initJitsiFrame(option);
 
+    cancelUserInvite();
     modalMgr.usersModal.close();
 
+}
+
+function cancelNewInvite() {
+    modalMgr.newInviteModal.close();
+    modalMgr.newInviteModal.inviteData = data;
+}
+
+function acceptNewInvite() {
+    var data = modalMgr.newInviteModal.inviteData;
+
+    option = prepareOption(data.roomName);
+
+    showInitialSetup(true);
+    toggleClass('#meet', 'cust-hidden');
+
+    initJitsiFrame(option);
+
+    modalMgr.newInviteModal.close();
 }
 
 function initListeners() {
@@ -311,6 +345,8 @@ function initListeners() {
     $('#usersModal .collection').delegate('.user-call', 'click', callUser);
     $('#userInviteCancel').on('click', cancelUserInvite);
     $('#userInviteAccept').on('click', acceptUserInvite);
+    $('#newInviteCancel').on('click', cancelNewInvite);
+    $('#newInviteAccept').on('click', acceptNewInvite);
 }
 
 function updateUserList() {

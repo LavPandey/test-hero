@@ -83,6 +83,10 @@ io.on('connection', (socket) => {
     socket.on('userinviteaccepted', (data) => {
         socket.broadcast.emit('userinviteaccepted', data);
     });
+
+    socket.on('groupinvite', (data) => {
+        socket.broadcast.emit('groupinvite', data);
+    });
 });
 
 const port = process.env.PORT || 3333
