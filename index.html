@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I2P Meet Demo</title>
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <link rel="stylesheet" href="css/all.css">
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+    <script type="text/javascript" src="./js/jitis.js"></script>
+    <!-- <script type="text/javascript" src="./js/socket.io.js"></script> -->
+    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script> -->
+
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+        }
+
+        /* 
+        .videocontainer .watermark.leftwatermark {
+            background-image: url(https://idea2product.tech/wp-content/themes/idea2product/assets/images/logo.png) !important;
+            max-width: 200px !important;
+            width: 200px;
+        }
+
+        .main-container {
+            height: inherit;
+        }
+
+        .meet-container {
+            height: calc(100% - 65px);
+        }
+
+        nav {
+            background-color: #fff;
+        }
+
+        a.brand-logo {
+            width: 215px;
+            height: 100px;
+            background-size: contain;
+            background-image: url(https://idea2product.tech/wp-content/themes/idea2product/assets/images/logo.png);
+            background-repeat: no-repeat;
+            top: 10px;
+        }
+
+        .modal a.close-modal {
+            display: none;
+        }
+
+       .join-new-meet {
+    position: relative;
+    left: calc(100% - 172px);
+} */
+    </style>
+</head>
+
+<body>
+    <!-- Header start-->
+    <nav>
+        <div class="nav-wrapper">
+            <a href="#" class="brand-logo"></a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down cust-hidden">
+                <a class="waves-effect waves-light btn team-call-btn">
+                    <i class="material-icons left">call</i>Team Call</a>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Welcome Page -->
+    <div class="welcome-page cust-hidden">
+        Welcome Page Content
+    </div>
+
+    <!-- Jitsi Meet Container -->
+    <div id="meet" class="meet-container cust-hidden"></div>
+
+    <!-- Header end -->
+    <a class="btn-floating btn-large waves-effect waves-light red host-meeting cust-hidden"><i
+            class="material-icons">add</i></a>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal i2p-modal">
+        <div class="modal-content">
+            <div class="modal-header z-depth-1">Authenticate User</div>
+            <div class="modal-body">
+                <div class="input-field col s12">
+                    <input id="authUserName" type="text" class="validate" required>
+                    <label for="authUserName">User Name</label>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="submitUserBtn" class="btn waves-effect waves-light" type="submit" name="action">Submit
+                    <i class="material-icons right">send</i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Host Meeting Modal -->
+    <div id="hostMeetModal" class="modal i2p-modal">
+        <div class="modal-content">
+            <div class="modal-header z-depth-1">New Meeting</div>
+            <div class="modal-body">
+                <div class="input-field col s12">
+                    <input id="meetName" type="text" class="validate">
+                    <label for="meetName">Meet Name</label>
+                </div>
+                <div class="invitee-list">
+                    <div class="chip">
+                        <span class="invite-list-name">Iron Man</span>
+                        <i class="close material-icons">close</i>
+                      </div>
+                      <div class="chip">
+                        <span class="invite-list-name">Spider-Man</span>
+                        <i class="close material-icons">close</i>
+                      </div>
+                      <div class="chip">
+                        <span class="invite-list-name">The Hulk</span>
+                        <i class="close material-icons">close</i>
+                      </div>
+                      <div class="chip">
+                        <span class="invite-list-name">Doctor Strange</span>
+                        <i class="close material-icons">close</i>
+                      </div>
+                      <div class="chip">
+                        <span class="invite-list-name">Black Panther</span>
+                        <i class="close material-icons">close</i>
+                      </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a id="copyMeet" class="waves-effect waves-light btn copy-meet">
+                    <i class="material-icons left">content_copy</i>Shareable Link
+                </a>
+                <button id="addInviteeBtn" class="btn waves-effect waves-light" type="submit" name="action">
+                    <i class="material-icons right">cancel</i>Cancel
+                </button>
+                <button id="meetBtn" class="btn waves-effect waves-light" type="submit" name="action">
+                    <i class="material-icons right">call</i>Start
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User List Modal -->
+    <div id="usersModal" class="modal i2p-modal">
+        <div class="modal-content">
+            <div class="modal-header z-depth-1">Users List</div>
+            <div class="modal-body">
+                <ul class="collection"></ul>
+            </div>
+        </div>
+    </div>
+
+     <!-- User List Modal -->
+     <div id="userInviteModal" class="modal i2p-modal">
+        <div class="modal-content">
+            <div class="modal-header z-depth-1">Meet Invitation</div>
+            <div class="modal-body">
+                
+            </div>
+            <div class="modal-footer">
+                <a id="userInviteCancel" class="waves-effect waves-light btn copy-meet">
+                    <i class="material-icons left">cancel</i>Cancel
+                </a>
+                <button id="userInviteAccept" class="btn waves-effect waves-light" type="submit" name="action">
+                    <i class="material-icons right">ok</i>Accept
+                </button>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="./js/socketapp.js"></script>
+    <script type="text/javascript" src="./js/app.js"></script>
+</body>
+
+</html>
