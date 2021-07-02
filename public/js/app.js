@@ -125,6 +125,8 @@ function initJitsiFrame(meetOption) {
     }
 
     JAPI = new JitsiMeetExternalAPI(domain, meetOption);
+
+    JAPI.addListener('readyToClose', function () { debugger });
 };
 
 function prepareUrl(val) {
