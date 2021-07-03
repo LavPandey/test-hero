@@ -87,6 +87,10 @@ io.on('connection', (socket) => {
     socket.on('groupinvite', (data) => {
         socket.broadcast.emit('groupinvite', data);
     });
+
+    socket.on('i2p_action', (data) => {
+        socket.broadcast.emit('i2p_action', data);
+    });
 });
 
 const port = process.env.PORT || 3333

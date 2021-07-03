@@ -16,3 +16,22 @@ I2P_SOCKET.on('groupinvite', function (data) {
         $('#newInviteModal .modal-body').html(data.from + ' Inviting to join group call...');
     }
 });
+
+I2P_SOCKET.on('i2p_action', function (data) {
+    if (data && data.handler && window[data.handler]) {
+        window[data.handler](data);
+
+        return;
+    }
+
+    console.log('Bo action handler');
+});
+
+
+function userCancelledCall(data) {
+    if (getLoggedInUser() !== data.from) {
+        return;
+    }
+
+    modalMgr.callRejectModal.open();
+}

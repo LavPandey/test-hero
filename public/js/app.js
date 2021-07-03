@@ -126,8 +126,12 @@ function initJitsiFrame(meetOption) {
 
     JAPI = new JitsiMeetExternalAPI(domain, meetOption);
 
-    JAPI.addListener('readyToClose', function () { debugger });
+    JAPI.addListener('participantLeft', onParticipantLeft);
 };
+
+function onParticipantLeft() {
+
+}
 
 function prepareUrl(val) {
     return (location.origin + location.pathname + '?meet=' + (val || defaultMeetName));
@@ -141,11 +145,35 @@ function isValidUser() {
         return showAuthPopUp();
     }
 
-    showInitialSetup()
+    checkMeetUrl()
 }
 
 function showAuthPopUp() {
     modalMgr.authModal.open();
+}
+
+function checkMeetUrl() {
+    var search = location.search.substring(1),
+        data, option;
+
+    if (!search) {
+        showInitialSetup();
+        return
+    }
+    data = JSON.parse('{"' + decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}');
+    option;
+
+    if (!data.meet) {
+        showInitialSetup();
+        return
+    }
+
+    option = prepareOption(data.meet);
+
+    initJitsiFrame(option);
+    showInitialSetup(true);
+    toggleClass('#meet', 'cust-hidden');
+    updateUserList();
 }
 
 function showInitialSetup(hidden) {
@@ -157,28 +185,45 @@ function showInitialSetup(hidden) {
 
 function initPopModal() {
     modalMgr.authModal = M.Modal.init($('#authModal'), {
-        dismissible: false
+        dismissible: false,
+        endingTop: '35%'
     })[0];
 
     modalMgr.hostMeetModal = M.Modal.init($('#hostMeetModal'), {
         dismissible: true,
-        top: '30%'
+        endingTop: '30%'
     })[0];
 
     modalMgr.usersModal = M.Modal.init($('#usersModal'), {
         dismissible: true,
-        top: '30%'
+        endingTop: '20%'
     })[0];
 
     modalMgr.userInviteModal = M.Modal.init($('#userInviteModal'), {
         dismissible: false,
-        top: '30%'
+        endingTop: '30%'
     })[0];
 
     modalMgr.newInviteModal = M.Modal.init($('#newInviteModal'), {
         dismissible: false,
-        top: '30%'
+        endingTop: '30%'
     })[0];
+
+    modalMgr.callRejectModal = M.Modal.init($('#callRejectModal'), {
+        dismissible: false,
+        endingTop: '35%',
+        onCloseEnd: 'onUserRejectCall'
+    })[0];
+}
+
+function onUserRejectCall() {
+    endCall();
+    showInitialSetup();
+}
+
+function handleCallReject() {
+    modalMgr.callRejectModal.close();
+    onUserRejectCall();
 }
 
 function onAddUserClick() {
@@ -192,7 +237,7 @@ function onAddUserClick() {
 
     modalMgr.authModal.close();
 
-    showInitialSetup();
+    checkMeetUrl();
 }
 
 function hostMeeting() {
@@ -230,16 +275,16 @@ function startMeet() {
 }
 
 function copyMeetToClipboard() {
-    var val = $('#meetName').val(),
-        txt;
+    var val = $('#meetName').val() || defaultMeetName,
+        text;
 
-    meetURL = prepareUrl(val);
+    text = meetURL = prepareUrl(val);
 
-    txt = $('<textarea />');
-    txt.val(meetURL).css({ width: "1px", height: "1px" }).appendTo('body');
-    txt.select();
+    var $txt = $('<textarea />');
+    $txt.val(text).css({ width: "1px", height: "1px" }).appendTo('body');
+    $txt.select();
     if (document.execCommand('copy')) {
-        txt.remove();
+        $txt.remove();
     }
 }
 
@@ -293,8 +338,18 @@ function callUser(e) {
 }
 
 function cancelUserInvite() {
+    var data = modalMgr.userInviteModal.inviteData;
+
     modalMgr.userInviteModal.close();
-    modalMgr.userInviteModal.inviteData = data;
+
+    I2P_SOCKET.emit('i2p_action', {
+        to: data.to,
+        from: data.from,
+        roomName: data.roomName,
+        handler: 'userCancelledCall'
+    });
+
+    modalMgr.userInviteModal.inviteData = null;
 }
 
 function acceptUserInvite() {
@@ -315,7 +370,7 @@ function acceptUserInvite() {
 
     initJitsiFrame(option);
 
-    cancelUserInvite();
+    modalMgr.userInviteModal.inviteData = null;
     modalMgr.usersModal.close();
 
 }
@@ -338,6 +393,10 @@ function acceptNewInvite() {
     modalMgr.newInviteModal.close();
 }
 
+function cancelHostMeetBtn() {
+    modalMgr.hostMeetModal.close();
+}
+
 function initListeners() {
     $('#submitUserBtn').on('click', onAddUserClick);
     $('.host-meeting').on('click', hostMeeting);
@@ -349,6 +408,8 @@ function initListeners() {
     $('#userInviteAccept').on('click', acceptUserInvite);
     $('#newInviteCancel').on('click', cancelNewInvite);
     $('#newInviteAccept').on('click', acceptNewInvite);
+    $('.reject-call').on('click', handleCallReject);
+    $('#cancelHostMeetBtn').on('click', cancelHostMeetBtn);
 }
 
 function updateUserList() {
@@ -395,5 +456,3 @@ $(function () {
     isValidUser();
     updateUserList();
 });
-
-
