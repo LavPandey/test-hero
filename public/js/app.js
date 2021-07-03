@@ -116,6 +116,7 @@ function endCall() {
     }
 
     $('#meet iframe').remove();
+    toggleClass('#meet', 'cust-hidden', true);
 }
 function initJitsiFrame(meetOption) {
     endCall();
@@ -124,13 +125,24 @@ function initJitsiFrame(meetOption) {
         modalMgr[key].close();
     }
 
+
+    toggleClass('#meet', 'cust-hidden');
     JAPI = new JitsiMeetExternalAPI(domain, meetOption);
 
     JAPI.addListener('participantLeft', onParticipantLeft);
+
+    JAPI.addListener('readyToClose', function () {
+        endCall();
+        showInitialSetup();
+    });
 };
 
 function onParticipantLeft() {
-
+    if (isUserCall) {
+        endCall();
+        showInitialSetup();
+    }
+    // endCall();
 }
 
 function prepareUrl(val) {
